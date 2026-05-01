@@ -7,6 +7,10 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
+const https = require('https');
+const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+axios.defaults.httpsAgent = httpsAgent;
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -56,7 +60,7 @@ async function fetchStreamCenterEvents() {
       if (ev.categoryId === 13) sport = 'baseball';
       if (ev.categoryId === 9) sport = 'nfl';
       
-      let embedUrl = ev.url || '';
+      let embedUrl = ev.videoUrl || ev.url || '';
       if (embedUrl.includes('<iframe')) {
         const match = embedUrl.match(/src=["']([^"']+)["']/);
         if (match) embedUrl = match[1];
@@ -68,7 +72,7 @@ async function fetchStreamCenterEvents() {
       if (embedUrl && embedUrl.startsWith('http')) {
         events.push({
           id: 'sc_' + ev.id,
-          title: ev.title,
+          title: ev.name || ev.gameName,
           sport: sport,
           isLive: true,
           embedUrl: embedUrl,
