@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>StreamHub — Live Sports Streaming</title>
+  <meta name="description" content="Watch live sports streams — Football, Basketball, Boxing, MMA, Cricket and more.">
+  <meta name="keywords" content="live sports, sports streaming, free nfl stream, nba live, premier league live, ufc stream">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="StreamHub — Live Sports Streaming">
+  <meta property="og:description" content="Watch high quality live sports streams for free. No ads, just sports.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+  <!-- Anti-Scraping / Anti-Inspect Security -->
+  <script>
+    // Disable Right Click
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    
+    // Disable DevTools shortcuts
+    document.onkeydown = function(e) {
+      if(e.key === 'F12' || 
+         (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) || 
+         (e.ctrlKey && (e.key === 'U' || e.key === 'u'))) {
+          e.preventDefault();
+          return false;
+      }
+    };
+    
+    // Check if site is iframed and break out (Frame Busting)
+    if (window.top !== window.self) {
+      window.top.location = window.self.location;
+    }
+  </script>
+</head>
+<body style="-webkit-user-select: none; user-select: none;">
+  <!-- ========== HEADER ========== -->
+  <header id="main-header">
+    <div class="header-inner">
+      <div class="logo" id="logo">
+        <span class="logo-icon">📺</span>
+        <span class="logo-text">Stream<span class="highlight">Hub</span></span>
+      </div>
+      <nav class="nav-links" id="nav-links">
+        <a href="#" class="nav-link active" data-section="live" id="nav-live-count">🔴 Live Now</a>
+        <a href="#" class="nav-link" data-section="sports">🏆 Sports</a>
+      </nav>
+      <div class="header-actions">
+        <button class="btn-refresh" id="btn-refresh" title="Refresh Events">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+        <div class="live-indicator" id="live-dot">
+          <span class="pulse"></span>
+          <span class="live-text">LIVE</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========== HERO BANNER ========== -->
+  <section class="hero" id="hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1>Watch Live Sports <span class="gradient-text">Anywhere</span></h1>
+      <p>Stream Football, Basketball, Boxing, MMA, Cricket and more — all in one place.</p>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-number" id="stat-live">0</span>
+          <span class="stat-label">Live Now</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number" id="stat-sports">10+</span>
+          <span class="stat-label">Sports</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number" id="stat-total">0</span>
+          <span class="stat-label">Events</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-particles" id="particles"></div>
+  </section>
+
+  <!-- ========== SPORT FILTER BAR ========== -->
+  <section class="filter-bar" id="filter-bar">
+    <div class="filter-inner">
+      <button class="sport-chip active" data-sport="all">🌐 All</button>
+      <button class="sport-chip" data-sport="football">⚽ Football</button>
+      <button class="sport-chip" data-sport="basketball">🏀 Basketball</button>
+      <button class="sport-chip" data-sport="baseball">⚾ Baseball</button>
+      <button class="sport-chip" data-sport="hockey">🏒 Hockey</button>
+      <button class="sport-chip" data-sport="boxing">🥊 Boxing</button>
+      <button class="sport-chip" data-sport="mma">🥋 MMA/UFC</button>
+      <button class="sport-chip" data-sport="tennis">🎾 Tennis</button>
+      <button class="sport-chip" data-sport="cricket">🏏 Cricket</button>
+      <button class="sport-chip" data-sport="golf">⛳ Golf</button>
+      <button class="sport-chip" data-sport="racing">🏎️ Racing</button>
+    </div>
+  </section>
+
+  <!-- ========== MAIN CONTENT ========== -->
+  <main id="main-content">
+
+    <!-- LIVE EVENTS SECTION -->
+    <section class="section" id="section-live">
+      <div class="section-header">
+        <h2>🔴 Live & Upcoming Events</h2>
+        <span class="event-count" id="event-count">0 events</span>
+      </div>
+      <div class="events-grid" id="events-grid">
+        <div class="loading-state" id="loading-state">
+          <div class="spinner"></div>
+          <p>Scanning for live streams...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PLAYER SECTION (iframe / m3u8) -->
+    <section class="section player-section hidden" id="section-player">
+      <div class="section-header">
+        <h2 id="player-title">Now Playing</h2>
+        <button class="btn-close-player" id="btn-close-player">✕ Close</button>
+      </div>
+      <div class="player-container">
+        <iframe id="stream-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock" allowfullscreen allow="autoplay; encrypted-media; fullscreen"></iframe>
+        <video id="hls-player" controls autoplay></video>
+      </div>
+      <div class="player-info" id="player-info">
+        <div class="player-meta">
+          <span class="live-badge">🔴 LIVE</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SPORTS BROWSE SECTION -->
+    <section class="section hidden" id="section-sports">
+      <div class="section-header">
+        <h2>🏆 Browse by Sport</h2>
+      </div>
+      <div class="sports-grid" id="sports-grid">
+        <div class="sport-card" data-sport="football">
+          <div class="sport-icon">⚽</div>
+          <h3>Football / Soccer</h3>
+          <p>EPL, La Liga, Champions League, MLS</p>
+        </div>
+        <div class="sport-card" data-sport="basketball">
+          <div class="sport-icon">🏀</div>
+          <h3>Basketball</h3>
+          <p>NBA, NCAAB, WNBA</p>
+        </div>
+        <div class="sport-card" data-sport="baseball">
+          <div class="sport-icon">⚾</div>
+          <h3>Baseball</h3>
+          <p>MLB, Spring Training</p>
+        </div>
+        <div class="sport-card" data-sport="hockey">
+          <div class="sport-icon">🏒</div>
+          <h3>Hockey</h3>
+          <p>NHL, World Championship</p>
+        </div>
+        <div class="sport-card" data-sport="boxing">
+          <div class="sport-icon">🥊</div>
+          <h3>Boxing</h3>
+          <p>PPV Fights, Title Bouts</p>
+        </div>
+        <div class="sport-card" data-sport="mma">
+          <div class="sport-icon">🥋</div>
+          <h3>MMA / UFC</h3>
+          <p>UFC, Bellator, PFL</p>
+        </div>
+        <div class="sport-card" data-sport="tennis">
+          <div class="sport-icon">🎾</div>
+          <h3>Tennis</h3>
+          <p>ATP, WTA, Grand Slams</p>
+        </div>
+        <div class="sport-card" data-sport="cricket">
+          <div class="sport-icon">🏏</div>
+          <h3>Cricket</h3>
+          <p>IPL, Test Matches, ODI</p>
+        </div>
+        <div class="sport-card" data-sport="golf">
+          <div class="sport-icon">⛳</div>
+          <h3>Golf</h3>
+          <p>PGA Tour, Masters</p>
+        </div>
+        <div class="sport-card" data-sport="racing">
+          <div class="sport-icon">🏎️</div>
+          <h3>Racing</h3>
+          <p>F1, NASCAR, IndyCar</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========== FOOTER ========== -->
+  <footer id="main-footer">
+    <div class="footer-inner">
+      <p>📺 StreamHub — Live Sports Streaming Aggregator</p>
+      <p class="footer-sub">Auto-refreshes every 2 minutes</p>
+    </div>
+  </footer>
+
+  <!-- ========== TOAST ========== -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
